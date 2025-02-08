@@ -14,8 +14,8 @@ Este é um sistema de **gerenciamento de projetos** desenvolvido em **React** no
 
 ### 1️⃣ Clonar o repositório
 ```sh
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
+git clone https://github.com/ProjetoBD2024-2025/FrontEnd.git
+cd FrontEnd
 ```
 
 ### 2️⃣ Instalar dependências do frontend
