@@ -69,7 +69,7 @@ const Projeto = () => {
 
   const handleUpload = async () => {
     if (!file) {
-      alert("Selecione ou arraste um arquivo antes de enviar.");
+      toast.info("Selecione ou arraste um arquivo antes de enviar.");
       return;
     }
 

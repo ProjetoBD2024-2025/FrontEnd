@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { X } from "lucide-react";
+import { toast } from "react-toastify"; 
 
-// Lista de status disponíveis
 const statusOptions = ["Planejado", "Em andamento", "Concluído"];
-
-// Função para formatar valores monetários no formato BRL (R$)
 const formatarMoeda = (valor: number | string) => {
   if (!valor || isNaN(Number(valor))) return "";
   return new Intl.NumberFormat("pt-BR", {
@@ -15,10 +13,9 @@ const formatarMoeda = (valor: number | string) => {
   }).format(Number(valor));
 };
 
-// Função para formatar data para input (YYYY-MM-DD)
 const formatarDataParaInput = (data: string) => {
   if (!data) return "";
-  return data.split("T")[0]; // Remove a parte do horário
+  return data.split("T")[0];
 };
 
 interface Cliente {
@@ -52,7 +49,6 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({ isOpen, onClose, onSa
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [equipes, setEquipes] = useState<Equipe[]>([]);
 
-  // Buscar clientes e equipes da API ao abrir o modal
   useEffect(() => {
     if (isOpen) {
       axios
@@ -88,18 +84,19 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({ isOpen, onClose, onSa
       ...projeto,
       Data_Inicio: formatarDataParaInput(projeto.Data_Inicio),
       Data_Fim_Prev: formatarDataParaInput(projeto.Data_Fim_Prev),
-      Orcamento_previsto: Number(projeto.Orcamento_previsto), // Garante que seja um número
+      Orcamento_previsto: Number(projeto.Orcamento_previsto),
     };
 
     axios
       .post("http://localhost:5000/projetos", projetoFormatado)
       .then(() => {
-        onSave(); // Atualiza a lista de projetos
-        onClose(); // Fecha o modal
+        toast.success("Sucesso ao adicionar o projeto.");
+        onSave();
+        onClose();
       })
       .catch((error) => {
         console.error("Erro ao adicionar projeto:", error);
-        alert("Erro ao adicionar o projeto.");
+        toast.error("Erro ao adicionar o projeto.");
       });
   };
 

@@ -7,16 +7,13 @@ import { Pencil, Trash2 } from "lucide-react"; // Ícones
 import EditProject from "./EditProject";
 import DeleteProjectModal from "./DeleteProject";
 import AddProjectModal from "./AdicionarProjeto";
+import { toast } from "react-toastify";
 
-// Função para formatar datas
  export const formatarData = (data: string) => { 
   if (!data) return "-";
 
   try {
-    // Criar data UTC sem ajuste de fuso horário
     const date = new Date(Date.parse(data));
-
-    // Formatar corretamente sem alteração do dia
     return format(
       new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()), 
       "dd 'de' MMMM 'de' yyyy", 
@@ -27,8 +24,6 @@ import AddProjectModal from "./AdicionarProjeto";
   }
 };
 
-
-// Função para formatar moeda
 const formatarMoeda = (valor: number) => {
   if (!valor || isNaN(valor)) return "-";
   return new Intl.NumberFormat("pt-BR", {
@@ -106,6 +101,7 @@ const Home = () => {
       axios
         .delete(`http://localhost:5000/projetos/${selectedProject.ID_Projeto}`)
         .then(() => {
+          toast.success("Projeto deletado com sucesso.");
           setProjetos(projetos.filter((projeto) => projeto.ID_Projeto !== selectedProject.ID_Projeto));
           closeDeleteModal();
         })
@@ -148,7 +144,6 @@ const Home = () => {
                 {projeto.Nome}
               </h2>
               <div className="flex gap-2">
-                {/* Botão de Editar */}
                 <button
                   onClick={() => openModal(projeto.ID_Projeto)}
                   className="p-1 bg-gray-200 rounded-md hover:bg-blue-300 transition"
@@ -156,7 +151,6 @@ const Home = () => {
                   <Pencil className="text-black w-4 h-4" />
                 </button>
 
-                {/* Botão de Deletar */}
                 <button
                   onClick={() => openDeleteModal(projeto)}
                   className="p-1 bg-gray-200 rounded-md hover:bg-red-300 transition"
@@ -169,8 +163,6 @@ const Home = () => {
             <p className="text-gray-600 mt-3"><strong>Descrição:</strong> {projeto.Descricao}</p>
             <p className="text-gray-600 mt-3"><strong>Data Início:</strong> {formatarData(projeto.Data_Inicio)}</p>
             <p className="text-gray-600 mt-3"><strong>Data Fim Previsto:</strong> {formatarData(projeto.Data_Fim_Prev)}</p>
-
-            {/* Status com cores diferentes */}
             <p className="text-gray-600 mt-3">
               <strong>Status:</strong>{" "}
               <span
@@ -194,10 +186,8 @@ const Home = () => {
         ))}
       </div>
 
-      {/* Modal de Edição */}
       <EditProject isOpen={isModalOpen} onClose={closeModal} projetoId={selectedProjectId} onSave={fetchProjects} />
 
-      {/* Modal de Exclusão */}
       <DeleteProjectModal 
         isOpen={isDeleteModalOpen} 
         onClose={closeDeleteModal} 

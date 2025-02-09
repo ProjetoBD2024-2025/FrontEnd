@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { X } from "lucide-react"; // Ícone de fechar
+import { X } from "lucide-react";
+import { toast } from "react-toastify";
 
 interface Projeto {
   ID_Projeto: number;
@@ -83,22 +84,19 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
     
     // Garantir que a data seja válida
     if (isNaN(date.getTime())) return "";
-  
-    // Formatar para YYYY-MM-DD
+
     const ano = date.getUTCFullYear();
-    const mes = String(date.getUTCMonth() + 1).padStart(2, "0"); // Adiciona zero à esquerda, se necessário
-    const dia = String(date.getUTCDate()).padStart(2, "0"); // Adiciona zero à esquerda, se necessário
+    const mes = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const dia = String(date.getUTCDate()).padStart(2, "0");
     
     return `${ano}-${mes}-${dia}`;
   };
   
-  // Formatar data para envio (YYYY-MM-DD)
   const formatarDataParaEnvio = (data: string) => {
     if (!data) return null;
-    return new Date(data).toISOString().split("T")[0]; // Retorna apenas "YYYY-MM-DD"
+    return new Date(data).toISOString().split("T")[0];
   };
 
-  // Formatar moeda para BRL (R$)
   const formatarMoeda = (valor: number | string) => {
     if (!valor || isNaN(Number(valor))) return "";
     return new Intl.NumberFormat("pt-BR", {
@@ -108,7 +106,6 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
     }).format(Number(valor));
   };
 
-  // Buscar dados ao abrir o modal
   useEffect(() => {
     if (projetoId) {
       setIsLoading(true);
@@ -130,13 +127,11 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
           setIsLoading(false);
         });
 
-      // Buscar lista de clientes
       axios
         .get("http://localhost:5000/clientes")
         .then((response) => setClientes(response.data))
         .catch((error) => console.error("Erro ao buscar clientes:", error));
 
-      // Buscar lista de equipes
       axios
         .get("http://localhost:5000/equipes")
         .then((response) => setEquipes(response.data))
@@ -149,17 +144,17 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
       const { name, value } = e.target;
   
       if (name === "Orcamento_previsto") {
-        const formattedValue = value.replace(/\D/g, ""); // Remove tudo que não for número
+        const formattedValue = value.replace(/\D/g, "");
         setProjeto({
           ...projeto,
-          [name]: Number((Number(formattedValue) / 100).toFixed(2)), // Ajusta casas decimais
+          [name]: Number((Number(formattedValue) / 100).toFixed(2)),
         });
       } else if (name === "Contratante") {
         setProjeto({
           ...projeto,
           Contratante: {
             ...projeto.Contratante,
-            Cliente_ID: value, // Atualiza o ID do cliente
+            Cliente_ID: value,
           },
         });
       } else if (name === "Equipe_Resp") {
@@ -167,7 +162,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
           ...projeto,
           Equipe_Resp: {
             ...projeto.Equipe_Resp,
-            ID_Equipe: value, // Atualiza o ID da equipe
+            ID_Equipe: value,
           },
         });
       } else {
@@ -181,25 +176,22 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(projeto);
     if (projeto && projetoId) {
       const projetoFormatado = {
         ...projeto,
-        Contratante: projeto.Contratante ? projeto.Contratante.Cliente_ID : null, // Verifica se Contratante existe
-        Equipe_Resp: projeto.Equipe_Resp ? projeto.Equipe_Resp.ID_Equipe : null, // Verifica se Equipe_Resp existe
+        Contratante: projeto.Contratante ? projeto.Contratante.Cliente_ID : null,
+        Equipe_Resp: projeto.Equipe_Resp ? projeto.Equipe_Resp.ID_Equipe : null,
         Data_Inicio: formatarDataParaEnvio(projeto.Data_Inicio),
         Data_Fim_Prev: formatarDataParaEnvio(projeto.Data_Fim_Prev),
-        Orcamento_previsto: Number(projeto.Orcamento_previsto), // Garante que seja um número
+        Orcamento_previsto: Number(projeto.Orcamento_previsto),
       };
-  
-      console.log(projetoFormatado, '--------------formated');
   
       axios
         .put(`http://localhost:5000/projetos/edit/${projetoId}`, projetoFormatado)
         .then(() => {
-          console.log("Projeto atualizado com sucesso!");
-          onSave(); // Atualiza a lista de projetos
-          onClose(); // Fecha o modal
+          toast.success("Projeto atualizado com sucesso!");
+          onSave();
+          onClose();
         })
         .catch((error) => {
           console.error("Erro ao salvar projeto:", error);
@@ -215,7 +207,7 @@ const EditProjectModal: React.FC<EditProjectModalProps> = ({ isOpen, onClose, pr
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-2xl relative">
-        {/* Botão de fechar */}
+
         <button onClick={onClose} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800">
           <X className="w-6 h-6" />
         </button>
