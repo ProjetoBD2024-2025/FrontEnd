@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Delete, PenIcon, Trash, TrashIcon } from "lucide-react";
 import { formatarData } from "./Home";
 import UploadFile from "./UploadFile";
 import { toast } from "react-toastify";
+import TaskDetailsModal from "./VisualizarTarefa";
+import EditarTarefa from "./EditarTarefa";
+import DeleteProjectModal from "./DeleteProject";
+import AddTaskModal from "./AdicionarTarefa";
 
 interface ProjetoDetalhado {
   Nome: string;
@@ -32,7 +36,9 @@ interface Tarefa {
   ID_Tarefa: number;
   Nome: string;
   Descricao: string;
-  Status: string;
+  Status: "Concluído" | "Em andamento" | "Pendente";
+  Data_Inicio: string;
+  Data_Fim_Prev: string;
 }
 
 interface Documento {
@@ -49,6 +55,61 @@ const Projeto = () => {
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [openModalTask, setOpenModalTask] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Tarefa>({ ID_Tarefa: 0, Nome: "", Descricao: "", Status: "Pendente", Data_Inicio: "", Data_Fim_Prev: "" });
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [openModalEditTask, setOpenModalEditTask] = useState(false);
+  const [openModalAddTask, setOpenModalAddTask] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  
+  const openModal = (id: number) => {
+    setSelectedTaskId(id);
+    setOpenModalEditTask(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setSelectedTask({ ID_Tarefa: 0, Nome: "", Descricao: "", Status: "Pendente", Data_Inicio: "", Data_Fim_Prev: "" });
+  };
+
+  const handleOpenModalDelete = (tarefa: Tarefa) => {
+    setSelectedTask(tarefa);
+    setDeleteModalOpen(true);
+  }
+
+  const closeModalAdd = () => {
+    setOpenModalAddTask(false);
+    setSelectedTaskId(null);
+  };
+
+  const closeModalEdit = () => {
+    setOpenModalEditTask(false);
+    setSelectedTaskId(null);
+  };
+
+  const fetchTasks = () => {
+    axios
+      .get(`http://localhost:5000/projetos/${ID_Projeto}/tarefas`)
+      .then((response) => setTarefas(response.data))
+      .catch((error) => {
+        console.error("Erro ao buscar tarefas:", error);
+        setError("Não foi possível carregar as tarefas.");
+      });
+  };
+
+  const handleDeleteTask  = () => {
+    axios
+      .delete(`http://localhost:5000/tarefas/${selectedTask.ID_Tarefa}`)
+      .then(() => {
+        toast.success("Tarefa deletada com sucesso.");
+        setDeleteModalOpen(false);
+        fetchTasks();
+      })
+      .catch((error) => {
+        console.error("Erro ao deletar tarefa:", error);
+        setError("Não foi possível deletar a tarefa.");
+      });
+  };
 
   useEffect(() => {
     if (ID_Projeto) {
@@ -90,16 +151,31 @@ const Projeto = () => {
     }
   };
 
+  const tasksDetails = (tarefa: Tarefa) => {
+    setOpenModalTask(true);
+    setSelectedTask(tarefa);
+  }
+
+  const handleDeleteDocument = async (id: number) => {
+    try {
+      await axios.delete(`http://localhost:5000/projetos/${ID_Projeto}/documentos/${id}`);
+      toast.success("Documento deletado com sucesso!");
+      const response = await axios.get(`http://localhost:5000/projetos/${ID_Projeto}/documentos`);
+      setDocumentos(response.data);
+    } catch (error) {
+      console.error("Erro ao deletar documento:", error);
+      toast.error("Erro ao deletar o documento.");
+    }
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <div className="flex items-center w-full max-w-xl gap-20">
+      <div className="flex items-center w-full max-w-3xl gap-60">
         <button
           onClick={() => navigate("/")}
           className="flex items-center text-blue-600 hover:text-blue-800 transition mb-6"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Voltar
         </button>
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Detalhes do Projeto</h1>
       </div>
@@ -110,17 +186,17 @@ const Projeto = () => {
         </div>
       )}
 
-{projeto ? (
-        <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-xl">
+      {projeto ? (
+        <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-3xl">
           <h2 className="text-2xl font-semibold text-gray-700 mb-4">{projeto.Nome}</h2>
           <p className="text-gray-600 mb-2"><strong>Descrição:</strong>{projeto.Descricao}</p>
           <p className="text-gray-600 mb-2"><strong>Data Início:</strong> {formatarData(projeto.Data_Inicio)}</p>
           <p className="text-gray-600 mb-2"><strong>Data Fim Previsto:</strong> {formatarData(projeto.Data_Fim_Prev)}</p>
           <p className="text-gray-600 mb-2"><strong>Status:</strong> 
             <span className={`ml-2 px-3 py-1 rounded text-white ${
-              projeto.Status === "Concluído" ? "bg-green-500" : 
-              projeto.Status === "Em andamento" ? "bg-blue-500" : 
-              "bg-yellow-500"
+              projeto.Status === "Concluído" ? "bg-green-300" : 
+              projeto.Status === "Em andamento" ? "bg-blue-300" : 
+              "bg-yellow-300"
             }`}>
               {projeto.Status}
             </span>
@@ -138,24 +214,34 @@ const Projeto = () => {
             <p className="text-gray-600"><strong>Supervisor:</strong> {projeto.Equipe_Resp.Supervisor_Nome}</p>
           </div>
 
-          {/* Seção de Tarefas */}
           <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-700 mb-3">Tarefas do Projeto</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">Tarefas do Projeto</h3>
+              <button className="text-white px-3 py-1 rounded-lg shadow-md hover:bg-blue-700 transition" onClick={() => setOpenModalAddTask(true)} style={{ backgroundColor: "rgb(28 93 173)" }}>
+                +
+              </button>
+            </div>
             {tarefas.length > 0 ? (
               <ul className="space-y-3">
                 {tarefas.map((tarefa) => (
                   <li key={tarefa.ID_Tarefa} className="bg-white p-3 rounded shadow flex justify-between items-center">
                     <div>
-                      <p className="text-gray-700 font-medium">{tarefa.Nome}</p>
-                      <p className="text-gray-600 text-sm">{tarefa.Descricao}</p>
+                      <p className="text-gray-700 font-medium" onClick={() => tasksDetails(tarefa)}>{tarefa.Nome}</p>
+                      <p className="text-gray-600 text-sm truncate w-64">{tarefa.Descricao}</p>
                     </div>
-                    <span className={`px-3 py-1 rounded text-white text-sm ${
-                      tarefa.Status === "Concluído" ? "bg-green-500" :
-                      tarefa.Status === "Em andamento" ? "bg-blue-500" :
-                      "bg-yellow-500"
-                    }`}>
-                      {tarefa.Status}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-3 py-1 rounded text-white text-sm ${
+                        tarefa.Status === "Concluído" ? "bg-green-300" :
+                        tarefa.Status === "Em andamento" ? "bg-blue-300" :
+                        "bg-yellow-300"
+                      }`}>
+                        {tarefa.Status}
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <PenIcon width={15} onClick={() => openModal(tarefa.ID_Tarefa)} />
+                        <Trash width={15} onClick={() => handleOpenModalDelete(tarefa)} />
+                      </div>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -177,13 +263,17 @@ const Projeto = () => {
                 {documentos.map((doc) => (
                   <li key={doc.ID_Documento} className="bg-white p-3 rounded shadow flex justify-between items-center">
                     <span className="text-gray-700">{doc.Nome_Arquivo}</span>
-                    <a
-                      href={`http://localhost:5000/projetos/${ID_Projeto}/documentos/${doc.ID_Documento}`}
-                      download={doc.Nome_Arquivo} // Garante o nome correto no download
-                      className="text-blue-600 hover:text-blue-800"
-                    >
-                      Baixar
-                    </a>
+                    <div className="flex items-center space-x-3">
+                      <a
+                        href={`http://localhost:5000/projetos/${ID_Projeto}/documentos/${doc.ID_Documento}`}
+                        download={doc.Nome_Arquivo} // Garante o nome correto no download
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        Baixar
+                      </a>
+                      <div className="h-5 border-l border-gray-400"></div>
+                      <TrashIcon width={15} onClick={() => handleDeleteDocument(doc.ID_Documento)} />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -195,6 +285,10 @@ const Projeto = () => {
       ) : (
         <div className="text-gray-600 text-lg">Carregando dados do projeto...</div>
       )}
+      <TaskDetailsModal onClose={() => setOpenModalTask(false)} isOpen={openModalTask} tarefa={selectedTask} />
+      <EditarTarefa isOpen={openModalEditTask} onClose={closeModalEdit} onSave={fetchTasks} tarefaId={selectedTaskId} />
+      <DeleteProjectModal isOpen={isDeleteModalOpen} onClose={closeDeleteModal} projectName={selectedTask.Nome} onConfirm={handleDeleteTask} />
+      <AddTaskModal isOpen={openModalAddTask} onClose={closeModalAdd} onSave={fetchTasks} projetoId={Number(ID_Projeto)} />
     </div>
   );
 };

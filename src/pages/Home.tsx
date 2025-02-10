@@ -126,7 +126,8 @@ const Home = () => {
           </p>
         )}
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition mt-4 md:mt-0"
+          className="text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 transition mt-4 md:mt-0"
+          style={{ backgroundColor: "rgb(28 93 173)" }}
           onClick={() => setIsAddModalOpen(true)}
         >
           Adicionar Projeto
@@ -146,14 +147,14 @@ const Home = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => openModal(projeto.ID_Projeto)}
-                  className="p-1 bg-gray-200 rounded-md hover:bg-blue-300 transition"
+                  className="p-1 rounded-md hover:bg-blue-300 transition"
                 >
                   <Pencil className="text-black w-4 h-4" />
                 </button>
 
                 <button
                   onClick={() => openDeleteModal(projeto)}
-                  className="p-1 bg-gray-200 rounded-md hover:bg-red-300 transition"
+                  className="p-1 rounded-md hover:bg-red-300 transition"
                 >
                   <Trash2 className="text-red-600 w-4 h-4" />
                 </button>
@@ -168,10 +169,10 @@ const Home = () => {
               <span
                 className={`px-2 py-1 rounded text-white ${
                   projeto.Status === "Concluído"
-                    ? "bg-green-500"
+                    ? "bg-green-300"
                     : projeto.Status === "Em andamento"
-                    ? "bg-blue-500"
-                    : "bg-yellow-500"
+                    ? "bg-blue-300"
+                    : "bg-yellow-300"
                 }`}
               >
                 {projeto.Status}

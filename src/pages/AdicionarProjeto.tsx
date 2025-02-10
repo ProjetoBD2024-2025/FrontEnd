@@ -226,7 +226,7 @@ const AddProjectModal: React.FC<AddProjectModalProps> = ({ isOpen, onClose, onSa
             </select>
           </div>
 
-          <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700">
+          <button type="submit" className="text-white px-6 py-2 rounded-md hover:bg-blue-700" style={{ backgroundColor: "rgb(28 93 173)" }}>
             Salvar Projeto
           </button>
         </form>
